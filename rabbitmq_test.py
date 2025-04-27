@@ -1,6 +1,7 @@
 import pika
 import os
 import sys
+import ssl
 
 # Get connection parameters from environment variables
 rabbitmq_host = os.environ.get('RABBITMQ_HOST')
@@ -22,7 +23,15 @@ try:
 
     # Define connection parameters
     # Ensure SSL is used for Amazon MQ (port 5671)
-    ssl_options = pika.SSLOptions(context=None) if int(rabbitmq_port) == 5671 else None
+    ssl_options = None
+    if int(rabbitmq_port) == 5671:
+        # Create a default SSL context
+        context = ssl.create_default_context()
+        # You might need to adjust context settings depending on your MQ broker's specific requirements,
+        # e.g., loading specific CA certificates if using self-signed or private CAs.
+        # context.load_verify_locations(cafile="/path/to/your/ca.pem") # Example
+        ssl_options = pika.SSLOptions(context)
+
     parameters = pika.ConnectionParameters(
         host=rabbitmq_host,
         port=int(rabbitmq_port),
